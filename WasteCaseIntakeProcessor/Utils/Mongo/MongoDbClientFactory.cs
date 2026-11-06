@@ -1,7 +1,7 @@
-using MongoDB.Driver;
 using System.Diagnostics.CodeAnalysis;
-using WasteCaseIntakeProcessor.Config;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using WasteCaseIntakeProcessor.Config;
 
 namespace WasteCaseIntakeProcessor.Utils.Mongo;
 
