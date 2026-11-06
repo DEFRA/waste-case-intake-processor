@@ -18,4 +18,5 @@ RUN apt update && \
 
 COPY --from=build /app/publish .
 EXPOSE 8085
+USER $APP_UID
 ENTRYPOINT ["dotnet", "WasteCaseIntakeProcessor.dll"]
