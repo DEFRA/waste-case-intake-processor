@@ -2,7 +2,7 @@
 
 The Case Intake Processor (CIP) takes submission events from domain systems and turns them into cases in Case Management.
 
-It is not regulator-specific. A single intake service serves all domains, and each domain has its own intake logic.
+It is not regulator-specific: it handles intake for all domains, and each domain has its own intake logic.
 
 > **Status:** this repository is currently the CDP .NET backend template with build tooling, health check and
 > README updates. The intake logic described below is not implemented yet.
@@ -49,9 +49,6 @@ sequenceDiagram
 
 Because the queue sits in between, a domain system doesn't need Case Management to be available when it publishes an
 event.
-
-Whether each domain's intake logic is deployed as a separate service or combined into one deployable is still to be
-decided.
 
 ## Local development
 
@@ -118,9 +115,9 @@ dependencies and the GitHub Actions versions, with test dependencies grouped int
 
 ## SonarCloud
 
-The SonarCloud scan is set up in [.github/workflows/sonarcloud.yml](.github/workflows/sonarcloud.yml) but not yet
-enabled. To enable it, set up the project in SonarCloud, add the `SONAR_TOKEN` repository secret and uncomment the
-`sonarcloud-scan` job in the pull request and publish workflows.
+The SonarCloud scan runs on every pull request and on every publish from `main`, using
+[.github/workflows/sonarcloud.yml](.github/workflows/sonarcloud.yml). It analyses the code and uploads test coverage.
+Results are on the [SonarCloud dashboard](https://sonarcloud.io/dashboard?id=DEFRA_waste-case-intake-processor).
 
 ## Licence
 
