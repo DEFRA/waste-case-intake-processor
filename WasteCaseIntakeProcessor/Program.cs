@@ -1,15 +1,13 @@
-using WasteCaseIntakeProcessor.Example.Endpoints;
-using WasteCaseIntakeProcessor.Example.Services;
-using WasteCaseIntakeProcessor.Config;
-using WasteCaseIntakeProcessor.Utils;
-using WasteCaseIntakeProcessor.Utils.Http;
-using WasteCaseIntakeProcessor.Utils.Mongo;
 using System.Diagnostics.CodeAnalysis;
-using WasteCaseIntakeProcessor.Utils.Logging;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using MongoDB.Driver;
 using MongoDB.Driver.Authentication.AWS;
 using Serilog;
+using WasteCaseIntakeProcessor.Config;
+using WasteCaseIntakeProcessor.Utils;
+using WasteCaseIntakeProcessor.Utils.Http;
+using WasteCaseIntakeProcessor.Utils.Logging;
+using WasteCaseIntakeProcessor.Utils.Mongo;
 
 var app = BuildApp(args);
 await app.RunAsync();
@@ -55,9 +53,6 @@ static void ConfigureServices(WebApplicationBuilder builder)
     ConfigureMongo(services, configuration);
 
     services.AddHealthChecks();
-
-    // App services
-    services.AddSingleton<IExamplePersistence, ExamplePersistence>();
 }
 
 [ExcludeFromCodeCoverage]
@@ -79,14 +74,12 @@ static void ConfigureHttpClients(IServiceCollection services)
 {
     services.AddTransient<ProxyHttpMessageHandler>();
 
-    // services.AddHttpClientWithTracing<IExampleClient, ExampleClient>();
-    // services.AddHttpClientWithProxy<IExternalClient, ExternalClient>();
+    // Register typed HTTP clients here with AddHttpClientWithTracing or AddHttpClientWithProxy.
 }
 
 [ExcludeFromCodeCoverage]
 static void ConfigureMongo(IServiceCollection services, IConfiguration configuration)
 {
-
     MongoExtensions.Register();
     MongoConventions.Register();
 
@@ -111,7 +104,4 @@ static void ConfigureMiddleware(WebApplication app)
 static void ConfigureEndpoints(WebApplication app)
 {
     app.MapHealthChecks("/health", new HealthCheckOptions());
-
-    // Remove before deploying
-    app.MapExampleEndpoints();
 }

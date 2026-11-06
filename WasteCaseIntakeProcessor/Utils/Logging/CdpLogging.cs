@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
-using WasteCaseIntakeProcessor.Utils.Auditing;
 using Elastic.Serilog.Enrichers.Web;
 using Serilog;
+using WasteCaseIntakeProcessor.Utils.Auditing;
 
 namespace WasteCaseIntakeProcessor.Utils.Logging;
 
@@ -27,8 +27,6 @@ public static class CdpLogging
 
         var auditLogger = AuditLogger.CreateAuditLogger();
 
-        config
-            .WriteTo.Logger(mainLogger)
-            .WriteTo.Logger(auditLogger);
+        config.WriteTo.Logger(mainLogger).WriteTo.Logger(auditLogger);
     }
 }

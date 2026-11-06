@@ -2,5 +2,5 @@
 // This can be used for inserting local test data when mongo starts up
 
 // Example:
-// db = db.getSiblingDB('cdp-node-backend-template')
+// db = db.getSiblingDB('waste-case-intake-processor')
 // db.foo.insertOne({bar: "baz"})
