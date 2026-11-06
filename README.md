@@ -64,7 +64,7 @@ decided.
 
 [compose.yml](compose.yml) starts a local environment with:
 
-- Localstack for AWS services (S3, SQS)
+- [floci](https://floci.io) for AWS services (S3, SQS, SNS)
 - Redis
 - MongoDB
 - This service
@@ -78,7 +78,7 @@ A more extensive setup is available in [DEFRA/cdp-local-environment](https://git
 ### Running
 
 ```bash
-dotnet run --project WasteCaseIntakeProcessor --launch-profile Development
+dotnet run --project WasteCaseIntakeProcessor --launch-profile WasteCaseIntakeProcessor
 ```
 
 ### MongoDB
