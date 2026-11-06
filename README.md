@@ -73,8 +73,6 @@ decided.
 docker compose up --build -d
 ```
 
-A more extensive setup is available in [DEFRA/cdp-local-environment](https://github.com/DEFRA/cdp-local-environment).
-
 ### Running
 
 ```bash
