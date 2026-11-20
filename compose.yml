@@ -1,16 +1,34 @@
 services:
-  # floci is a replacement for localstack. It emulates AWS resources (sqs, sns, s3 etc) for local development
-  # See: https://floci.io for more details
+  # floci emulates AWS (SQS, SNS, S3) for local development — see https://floci.io
   floci:
-    image: hectorvent/floci:latest-aws
+    image: floci/floci:2.4.0@sha256:5ee85db604c4aa74ac76e07ea5cc83086f37bb472bf3dbb97e34019e48efae9c
     ports:
       - '4566:4566'
     env_file:
       - 'compose/aws.env'
     environment:
       FLOCI_DEFAULT_REGION: eu-west-2
+    healthcheck:
+      test: ['CMD', '/usr/local/bin/healthcheck.sh']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - cdp-tenant
+
+  floci-init:
+    image: amazon/aws-cli:2.39.6@sha256:eccdb3ec77e159d43ca6a750a70738c546883138be7f094498294a1477ec7e42
+    entrypoint: ['/bin/sh', '/compose/init-floci.sh']
+    depends_on:
+      floci:
+        condition: service_healthy
+    env_file:
+      - 'compose/aws.env'
+    environment:
+      AWS_ENDPOINT_URL: http://floci:4566
     volumes:
-      - ./compose/floci/start.d:/etc/floci/init/start.d:ro
+      - ./compose/init-floci.sh:/compose/init-floci.sh:ro
     networks:
       - cdp-tenant
 
@@ -36,19 +54,22 @@ services:
     build: ./
     ports:
       - '8085:8085'
-    links:
-      - 'floci:floci'
-      - 'mongodb:mongodb'
     depends_on:
-      floci:
-        condition: service_healthy
+      floci-init:
+        condition: service_completed_successfully
       mongodb:
         condition: service_started
     env_file:
       - 'compose/aws.env'
     environment:
       ASPNETCORE_URLS: http://+:8085
+      ASPNETCORE_ENVIRONMENT: Development
       Mongo__DatabaseUri: mongodb://mongodb:27017/
+      AWS_ENDPOINT_URL: http://floci:4566
+      IntakeEventConsumer__ProcessingEnabled: 'true'
+      IntakeEventConsumer__QueueUrl: http://floci:4566/000000000000/waste_case_intake_csoc_analytics_events_queue
+      IntakeEventConsumer__WaitTimeSeconds: '1'
+      IntakeEventConsumer__PollIntervalSeconds: '1'
     networks:
       - cdp-tenant
 
