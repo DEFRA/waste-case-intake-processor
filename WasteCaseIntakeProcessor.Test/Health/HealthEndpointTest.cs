@@ -9,7 +9,11 @@ public class HealthEndpointTest
     public async Task Get_returns_ok_and_healthy()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("AWS:ServiceURL", "http://localhost:4566");
+            builder.UseSetting("AWS:Region", "eu-west-2");
+        });
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/health", cancellationToken);
