@@ -4,6 +4,8 @@ using MongoDB.Driver;
 using MongoDB.Driver.Authentication.AWS;
 using Serilog;
 using WasteCaseIntakeProcessor.Config;
+using WasteCaseIntakeProcessor.Intake;
+using WasteCaseIntakeProcessor.Startup;
 using WasteCaseIntakeProcessor.Utils;
 using WasteCaseIntakeProcessor.Utils.Http;
 using WasteCaseIntakeProcessor.Utils.Logging;
@@ -21,6 +23,8 @@ static WebApplication BuildApp(string[] args)
     ConfigureServices(builder);
 
     var app = builder.Build();
+
+    app.Lifetime.ApplicationStarted.Register(app.Services.GetRequiredService<ApplicationStartup>().MarkStarted);
 
     ConfigureMiddleware(app);
     ConfigureEndpoints(app);
@@ -53,6 +57,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
     ConfigureMongo(services, configuration);
 
     services.AddHealthChecks();
+    services.AddIntakeEventConsumer(configuration);
 }
 
 [ExcludeFromCodeCoverage]
