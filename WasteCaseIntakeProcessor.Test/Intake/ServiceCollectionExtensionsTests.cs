@@ -59,4 +59,30 @@ public class ServiceCollectionExtensionsTests
             _ = provider.GetRequiredService<IOptions<IntakeEventConsumerOptions>>().Value
         );
     }
+
+    [Fact]
+    public void AddIntakeEventConsumer_fails_when_processing_budget_invalid()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["IntakeEventConsumer:QueueUrl"] =
+                        "http://localhost:4566/000000000000/waste_case_intake_csoc_analytics_events_queue",
+                    ["IntakeEventConsumer:ProcessingEnabled"] = "false",
+                    ["IntakeEventConsumer:VisibilityTimeoutSeconds"] = "30",
+                    ["IntakeEventConsumer:ProcessingTimeoutSeconds"] = "60",
+                }
+            )
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddIntakeEventConsumer(configuration);
+
+        using var provider = services.BuildServiceProvider();
+        Assert.Throws<OptionsValidationException>(() =>
+            _ = provider.GetRequiredService<IOptions<IntakeEventConsumerOptions>>().Value
+        );
+    }
 }

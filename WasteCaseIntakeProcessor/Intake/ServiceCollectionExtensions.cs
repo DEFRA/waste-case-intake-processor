@@ -17,6 +17,10 @@ public static class ServiceCollectionExtensions
             .Bind(configuration.GetRequiredSection(IntakeEventConsumerOptions.SectionName))
             .ValidateDataAnnotations()
             .Validate(options => options.HandledEventTypes.Length > 0, "At least one handled event type is required")
+            .Validate(
+                options => options.HasValidProcessingBudget,
+                "Visibility timeout must cover the processing budget and the receive timeout must exceed the wait time"
+            )
             .ValidateOnStart();
 
         services.AddSingleton<IntakeEventFilter>();

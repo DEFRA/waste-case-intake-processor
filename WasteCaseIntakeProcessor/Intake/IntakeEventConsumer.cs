@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -26,25 +27,38 @@ public sealed class IntakeEventConsumer(
             return;
         }
 
+        if (!options.Value.HasValidProcessingBudget)
+        {
+            throw new InvalidOperationException(
+                "Intake visibility timeout does not cover its processing budget; check IntakeEventConsumer timeouts."
+            );
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                var response = await sqsClient.ReceiveMessageAsync(
-                    new ReceiveMessageRequest
-                    {
-                        QueueUrl = options.Value.QueueUrl,
-                        MaxNumberOfMessages = 1,
-                        VisibilityTimeout = options.Value.VisibilityTimeoutSeconds,
-                        MessageAttributeNames = ["All"],
-                        WaitTimeSeconds = options.Value.WaitTimeSeconds,
-                    },
+                var response = await RunBounded(
+                    token =>
+                        sqsClient.ReceiveMessageAsync(
+                            new ReceiveMessageRequest
+                            {
+                                QueueUrl = options.Value.QueueUrl,
+                                MaxNumberOfMessages = 1,
+                                VisibilityTimeout = options.Value.VisibilityTimeoutSeconds,
+                                MessageAttributeNames = ["All"],
+                                WaitTimeSeconds = options.Value.WaitTimeSeconds,
+                            },
+                            token
+                        ),
+                    options.Value.ReceiveTimeoutSeconds,
                     stoppingToken
                 );
 
+                var receivedAt = Stopwatch.GetTimestamp();
                 foreach (var message in response.Messages ?? [])
                 {
-                    await ProcessMessage(message, stoppingToken);
+                    await ProcessMessage(message, receivedAt, stoppingToken);
                 }
             }
             catch (Exception) when (stoppingToken.IsCancellationRequested)
@@ -63,7 +77,7 @@ public sealed class IntakeEventConsumer(
         }
     }
 
-    private async Task ProcessMessage(Message message, CancellationToken stoppingToken)
+    private async Task ProcessMessage(Message message, long receivedAt, CancellationToken stoppingToken)
     {
         var eventId = (string?)null;
         var entityId = (string?)null;
@@ -90,7 +104,14 @@ public sealed class IntakeEventConsumer(
                 return;
             }
 
-            await processor.ProcessAsync(analyticsEvent, stoppingToken);
+            EnsureRemaining(receivedAt, options.Value.ProcessingTimeoutSeconds + options.Value.DeleteTimeoutSeconds);
+            await RunBounded(
+                token => processor.ProcessAsync(analyticsEvent, token),
+                options.Value.ProcessingTimeoutSeconds,
+                stoppingToken
+            );
+
+            EnsureRemaining(receivedAt, options.Value.DeleteTimeoutSeconds);
             await DeleteMessage(message, stoppingToken);
 
             if (logger.IsEnabled(LogLevel.Information))
@@ -126,5 +147,58 @@ public sealed class IntakeEventConsumer(
     }
 
     private Task DeleteMessage(Message message, CancellationToken stoppingToken) =>
-        sqsClient.DeleteMessageAsync(options.Value.QueueUrl, message.ReceiptHandle, stoppingToken);
+        RunBounded(
+            token => sqsClient.DeleteMessageAsync(options.Value.QueueUrl, message.ReceiptHandle, token),
+            options.Value.DeleteTimeoutSeconds,
+            stoppingToken
+        );
+
+    /// <summary>
+    /// Fail fast while a message is still invisible if the remaining visibility budget can no longer
+    /// cover the next step plus safety headroom, so the message is left for a clean redelivery instead
+    /// of being processed past its visibility timeout and risking a duplicate.
+    /// </summary>
+    private void EnsureRemaining(long receivedAt, int budgetSeconds)
+    {
+        var elapsed = Stopwatch.GetElapsedTime(receivedAt);
+        var required = TimeSpan.FromSeconds(budgetSeconds + options.Value.SafetyHeadroomSeconds);
+        if (elapsed + required >= TimeSpan.FromSeconds(options.Value.VisibilityTimeoutSeconds))
+        {
+            throw new TimeoutException("Intake processing budget exhausted.");
+        }
+    }
+
+    private static async Task<T> RunBounded<T>(
+        Func<CancellationToken, Task<T>> operation,
+        int seconds,
+        CancellationToken stoppingToken
+    )
+    {
+        using var source = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+        source.CancelAfter(TimeSpan.FromSeconds(seconds));
+        var startedAt = Stopwatch.GetTimestamp();
+        var result = await operation(source.Token).WaitAsync(source.Token);
+        stoppingToken.ThrowIfCancellationRequested();
+        if (Stopwatch.GetElapsedTime(startedAt) >= TimeSpan.FromSeconds(seconds))
+        {
+            throw new TimeoutException("Intake dependency exceeded its timeout.");
+        }
+
+        return result;
+    }
+
+    private static Task RunBounded(
+        Func<CancellationToken, Task> operation,
+        int seconds,
+        CancellationToken stoppingToken
+    ) =>
+        RunBounded<object?>(
+            async token =>
+            {
+                await operation(token);
+                return null;
+            },
+            seconds,
+            stoppingToken
+        );
 }
