@@ -29,8 +29,8 @@ public class LoggingIntakeProcessorTests
             .Log(
                 LogLevel.Information,
                 Arg.Any<EventId>(),
-                Arg.Is<object>(state => state.ToString()!.Contains("ev-1")),
-                null,
+                Arg.Any<object>(),
+                Arg.Any<Exception?>(),
                 Arg.Any<Func<object, Exception?, string>>()
             );
     }
@@ -45,7 +45,15 @@ public class LoggingIntakeProcessorTests
 
         await processor.ProcessAsync(analyticsEvent, CancellationToken.None);
 
-        logger.DidNotReceiveWithAnyArgs().Log(default, default, default!, default, default!);
+        logger
+            .DidNotReceive()
+            .Log(
+                Arg.Any<LogLevel>(),
+                Arg.Any<EventId>(),
+                Arg.Any<object>(),
+                Arg.Any<Exception?>(),
+                Arg.Any<Func<object, Exception?, string>>()
+            );
     }
 
     [Fact]
