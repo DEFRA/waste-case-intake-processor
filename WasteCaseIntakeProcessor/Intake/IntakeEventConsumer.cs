@@ -146,7 +146,7 @@ public sealed class IntakeEventConsumer(
         }
     }
 
-    private Task DeleteMessage(Message message, CancellationToken stoppingToken) =>
+    private Task<DeleteMessageResponse> DeleteMessage(Message message, CancellationToken stoppingToken) =>
         RunBounded(
             token => sqsClient.DeleteMessageAsync(options.Value.QueueUrl, message.ReceiptHandle, token),
             options.Value.DeleteTimeoutSeconds,
@@ -187,7 +187,7 @@ public sealed class IntakeEventConsumer(
         return result;
     }
 
-    private static Task RunBounded(
+    private static Task<object?> RunBounded(
         Func<CancellationToken, Task> operation,
         int seconds,
         CancellationToken stoppingToken

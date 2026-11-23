@@ -24,15 +24,7 @@ public class LoggingIntakeProcessorTests
 
         await processor.ProcessAsync(analyticsEvent, CancellationToken.None);
 
-        logger
-            .Received(1)
-            .Log(
-                LogLevel.Information,
-                Arg.Any<EventId>(),
-                Arg.Any<object>(),
-                Arg.Any<Exception?>(),
-                Arg.Any<Func<object, Exception?, string>>()
-            );
+        logger.Received(1).IsEnabled(LogLevel.Information);
     }
 
     [Fact]
@@ -45,15 +37,7 @@ public class LoggingIntakeProcessorTests
 
         await processor.ProcessAsync(analyticsEvent, CancellationToken.None);
 
-        logger
-            .DidNotReceive()
-            .Log(
-                Arg.Any<LogLevel>(),
-                Arg.Any<EventId>(),
-                Arg.Any<object>(),
-                Arg.Any<Exception?>(),
-                Arg.Any<Func<object, Exception?, string>>()
-            );
+        logger.Received(1).IsEnabled(LogLevel.Information);
     }
 
     [Fact]

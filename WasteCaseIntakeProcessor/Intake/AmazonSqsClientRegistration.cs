@@ -11,7 +11,7 @@ internal static class AmazonSqsClientRegistration
         services.AddSingleton<IAmazonSQS>(_ => CreateClient(configuration));
     }
 
-    private static IAmazonSQS CreateClient(IConfiguration configuration)
+    private static AmazonSQSClient CreateClient(IConfiguration configuration)
     {
         var serviceUrl = configuration["AWS:ServiceURL"] ?? Environment.GetEnvironmentVariable("AWS_ENDPOINT_URL");
         var regionName = configuration["AWS:Region"] ?? configuration["AWS_DEFAULT_REGION"] ?? "eu-west-2";
