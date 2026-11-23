@@ -44,7 +44,7 @@ public class AnalyticsMessageBodyReaderTests
             },
         };
 
-        Assert.Throws<InvalidOperationException>(() => AnalyticsMessageBodyReader.Read(message));
+        Assert.Throws<IntakeEventProcessingException>(() => AnalyticsMessageBodyReader.Read(message));
     }
 
     private static string CompressToBase64(string text)

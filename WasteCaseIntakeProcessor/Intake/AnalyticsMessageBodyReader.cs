@@ -22,9 +22,7 @@ public static class AnalyticsMessageBodyReader
 
         if (contentEncoding.StringValue != GzipBase64ContentEncoding)
         {
-            throw new InvalidOperationException(
-                $"Analytics event message content encoding '{contentEncoding.StringValue}' is not supported."
-            );
+            throw new IntakeEventProcessingException("unsupported-content-encoding");
         }
 
         var bytes = Convert.FromBase64String(message.Body);

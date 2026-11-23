@@ -17,12 +17,10 @@ public class IntakeFailureReasonTests
     }
 
     [Fact]
-    public void IsNonRetryable_treats_unsupported_content_encoding_as_non_retryable()
+    public void IsNonRetryable_treats_timeout_as_retryable()
     {
-        var exception = new InvalidOperationException(
-            "Analytics event message content encoding 'br' is not supported."
-        );
+        var exception = new TimeoutException("Intake processing budget exhausted.");
 
-        Assert.True(IntakeFailureReason.IsNonRetryable(exception));
+        Assert.False(IntakeFailureReason.IsNonRetryable(exception));
     }
 }

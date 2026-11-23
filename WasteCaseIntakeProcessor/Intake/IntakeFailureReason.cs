@@ -9,8 +9,6 @@ public static class IntakeFailureReason
         {
             IntakeEventProcessingException => true,
             JsonException => true,
-            InvalidOperationException invalid
-                when invalid.Message.Contains("content encoding", StringComparison.Ordinal) => true,
             _ => false,
         };
 }
