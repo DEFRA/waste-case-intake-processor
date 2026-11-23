@@ -1,3 +1,4 @@
+using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -58,6 +59,31 @@ public class ServiceCollectionExtensionsTests
         Assert.Throws<OptionsValidationException>(() =>
             _ = provider.GetRequiredService<IOptions<IntakeEventConsumerOptions>>().Value
         );
+    }
+
+    [Fact]
+    public void AddIntakeEventConsumer_registers_sqs_client_when_local_service_url_set()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["IntakeEventConsumer:QueueUrl"] =
+                        "http://localhost:4566/000000000000/waste_case_intake_csoc_analytics_events_queue",
+                    ["IntakeEventConsumer:ProcessingEnabled"] = "false",
+                    ["AWS:ServiceURL"] = "http://localhost:4566",
+                }
+            )
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddIntakeEventConsumer(configuration);
+
+        using var provider = services.BuildServiceProvider();
+        var sqs = provider.GetRequiredService<IAmazonSQS>();
+
+        Assert.NotNull(sqs);
     }
 
     [Fact]

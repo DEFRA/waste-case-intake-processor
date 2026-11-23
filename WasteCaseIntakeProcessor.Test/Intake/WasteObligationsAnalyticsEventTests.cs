@@ -41,4 +41,40 @@ public class WasteObligationsAnalyticsEventTests
 
         Assert.Throws<IntakeEventProcessingException>(() => WasteObligationsAnalyticsEvent.Parse(body));
     }
+
+    [Theory]
+    [InlineData("compliance_declaration_v1.0", true)]
+    [InlineData("compliance_declaration_v1.3", true)]
+    [InlineData("compliance_declaration_v0.9", false)]
+    [InlineData("other_entity_v1.0", false)]
+    public void SupportsDeclarationSchema_checks_version(string schemaVersion, bool expected)
+    {
+        var parsed = WasteObligationsAnalyticsEvent.Parse(
+            $$"""
+            {
+              "eventId": "e1",
+              "entityId": "cdec_x",
+              "schemaVersion": "{{schemaVersion}}"
+            }
+            """
+        );
+
+        Assert.Equal(expected, parsed.SupportsDeclarationSchema);
+    }
+
+    [Fact]
+    public void Parse_without_organisation_yields_null_organisation_id()
+    {
+        var parsed = WasteObligationsAnalyticsEvent.Parse(
+            """
+            {
+              "eventId": "e2",
+              "entityId": "cdec_y",
+              "eventType": "submission.created"
+            }
+            """
+        );
+
+        Assert.Null(parsed.OrganisationId);
+    }
 }
