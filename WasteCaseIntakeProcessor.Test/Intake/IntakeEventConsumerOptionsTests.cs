@@ -39,4 +39,29 @@ public class IntakeEventConsumerOptionsTests
 
         Assert.False(options.HasValidProcessingBudget);
     }
+
+    [Fact]
+    public void HasValidProcessingBudget_rejects_visibility_at_exact_processing_budget()
+    {
+        // Defaults: Processing(60) + Delete(5) + Headroom(10) = 75; must be strictly greater than EnsureRemaining allows.
+        var options = new IntakeEventConsumerOptions
+        {
+            QueueUrl = "http://localhost/queue",
+            VisibilityTimeoutSeconds = 75,
+        };
+
+        Assert.False(options.HasValidProcessingBudget);
+    }
+
+    [Fact]
+    public void HasValidProcessingBudget_accepts_visibility_one_second_above_processing_budget()
+    {
+        var options = new IntakeEventConsumerOptions
+        {
+            QueueUrl = "http://localhost/queue",
+            VisibilityTimeoutSeconds = 76,
+        };
+
+        Assert.True(options.HasValidProcessingBudget);
+    }
 }

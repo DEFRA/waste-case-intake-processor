@@ -110,9 +110,10 @@ public sealed class IntakeEventConsumer(
             );
 
             EnsureRemaining(receivedAt, options.Value.DeleteTimeoutSeconds);
-            await TryDeleteMessage(message, eventId, entityId, stoppingToken);
-
-            if (logger.IsEnabled(LogLevel.Information))
+            if (
+                await TryDeleteMessage(message, eventId, entityId, stoppingToken)
+                && logger.IsEnabled(LogLevel.Information)
+            )
             {
                 logger.LogInformation(
                     "Consumed intake analytics event {EventId} for entity {EntityId}",
@@ -144,7 +145,7 @@ public sealed class IntakeEventConsumer(
         }
     }
 
-    private async Task TryDeleteMessage(
+    private async Task<bool> TryDeleteMessage(
         Message message,
         string? eventId,
         string? entityId,
@@ -154,6 +155,7 @@ public sealed class IntakeEventConsumer(
         try
         {
             await DeleteMessage(message, stoppingToken);
+            return true;
         }
         catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
         {
@@ -163,6 +165,8 @@ public sealed class IntakeEventConsumer(
                 eventId,
                 entityId
             );
+
+            return false;
         }
     }
 
