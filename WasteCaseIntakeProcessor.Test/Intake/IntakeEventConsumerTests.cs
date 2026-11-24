@@ -233,8 +233,6 @@ public class IntakeEventConsumerTests
         await consumer.StartAsync(cts.Token);
         await consumer.ExecuteTask!;
 
-        await sqsClient
-            .Received(2)
-            .ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
+        await sqsClient.Received(2).ReceiveMessageAsync(Arg.Any<ReceiveMessageRequest>(), Arg.Any<CancellationToken>());
     }
 }
