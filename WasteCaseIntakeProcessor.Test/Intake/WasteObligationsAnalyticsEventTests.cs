@@ -62,6 +62,15 @@ public class WasteObligationsAnalyticsEventTests
         Assert.Equal(expected, parsed.SupportsDeclarationSchema);
     }
 
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("null")]
+    [InlineData("\"string\"")]
+    public void Parse_non_object_json_throws(string body)
+    {
+        Assert.Throws<IntakeEventProcessingException>(() => WasteObligationsAnalyticsEvent.Parse(body));
+    }
+
     [Fact]
     public void Parse_without_organisation_yields_null_organisation_id()
     {

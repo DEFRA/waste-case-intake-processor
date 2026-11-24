@@ -25,11 +25,26 @@ public static class AnalyticsMessageBodyReader
             throw new IntakeEventProcessingException("unsupported-content-encoding");
         }
 
-        var bytes = Convert.FromBase64String(message.Body);
-        using var input = new MemoryStream(bytes);
-        using var gzip = new GZipStream(input, CompressionMode.Decompress);
-        using var reader = new StreamReader(gzip, Encoding.UTF8);
+        byte[] bytes;
+        try
+        {
+            bytes = Convert.FromBase64String(message.Body);
+        }
+        catch (FormatException)
+        {
+            throw new IntakeEventProcessingException("invalid-content-encoding");
+        }
 
-        return reader.ReadToEnd();
+        try
+        {
+            using var input = new MemoryStream(bytes);
+            using var gzip = new GZipStream(input, CompressionMode.Decompress);
+            using var reader = new StreamReader(gzip, Encoding.UTF8);
+            return reader.ReadToEnd();
+        }
+        catch (InvalidDataException)
+        {
+            throw new IntakeEventProcessingException("invalid-content-encoding");
+        }
     }
 }

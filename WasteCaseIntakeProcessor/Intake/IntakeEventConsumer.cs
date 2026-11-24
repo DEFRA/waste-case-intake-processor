@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.Extensions.Options;
@@ -7,7 +6,6 @@ using WasteCaseIntakeProcessor.Startup;
 
 namespace WasteCaseIntakeProcessor.Intake;
 
-[ExcludeFromCodeCoverage]
 public sealed class IntakeEventConsumer(
     IAmazonSQS sqsClient,
     IOptions<IntakeEventConsumerOptions> options,

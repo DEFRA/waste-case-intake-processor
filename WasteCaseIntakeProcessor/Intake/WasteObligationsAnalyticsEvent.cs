@@ -26,6 +26,12 @@ public sealed record WasteObligationsAnalyticsEvent(
     {
         using var document = JsonDocument.Parse(body);
         var root = document.RootElement;
+
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            throw new IntakeEventProcessingException("invalid-event-envelope");
+        }
+
         var organisation = Object(Object(root, "after"), "organisation");
         var organisationId = String(organisation, "id");
 

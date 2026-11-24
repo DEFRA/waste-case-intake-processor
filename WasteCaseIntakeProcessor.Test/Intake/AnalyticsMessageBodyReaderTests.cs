@@ -47,6 +47,38 @@ public class AnalyticsMessageBodyReaderTests
         Assert.Throws<IntakeEventProcessingException>(() => AnalyticsMessageBodyReader.Read(message));
     }
 
+    [Fact]
+    public void Read_invalid_base64_throws_non_retryable()
+    {
+        var message = new Message
+        {
+            Body = "not-valid-base64!!!",
+            MessageAttributes = new Dictionary<string, MessageAttributeValue>
+            {
+                ["Content-Encoding"] = new() { StringValue = "gzip+base64", DataType = "String" },
+            },
+        };
+
+        Assert.Throws<IntakeEventProcessingException>(() => AnalyticsMessageBodyReader.Read(message));
+    }
+
+    [Fact]
+    public void Read_invalid_gzip_throws_non_retryable()
+    {
+        // Valid base64 but the decoded bytes are not a valid gzip stream
+        var notGzip = Convert.ToBase64String("this is not gzip data"u8.ToArray());
+        var message = new Message
+        {
+            Body = notGzip,
+            MessageAttributes = new Dictionary<string, MessageAttributeValue>
+            {
+                ["Content-Encoding"] = new() { StringValue = "gzip+base64", DataType = "String" },
+            },
+        };
+
+        Assert.Throws<IntakeEventProcessingException>(() => AnalyticsMessageBodyReader.Read(message));
+    }
+
     private static string CompressToBase64(string text)
     {
         var bytes = Encoding.UTF8.GetBytes(text);

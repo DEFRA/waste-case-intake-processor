@@ -66,6 +66,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       Mongo__DatabaseUri: mongodb://mongodb:27017/
       AWS_ENDPOINT_URL: http://floci:4566
+      AWS__ServiceURL: http://floci:4566
       IntakeEventConsumer__ProcessingEnabled: 'true'
       IntakeEventConsumer__QueueUrl: http://floci:4566/000000000000/waste_case_intake_csoc_analytics_events_queue
       IntakeEventConsumer__WaitTimeSeconds: '1'
