@@ -98,7 +98,7 @@ public sealed class IntakeEventConsumer(
                     );
                 }
 
-                await DeleteMessage(message, stoppingToken);
+                await TryDeleteMessage(message, eventId, entityId, stoppingToken);
                 return;
             }
 
@@ -110,7 +110,7 @@ public sealed class IntakeEventConsumer(
             );
 
             EnsureRemaining(receivedAt, options.Value.DeleteTimeoutSeconds);
-            await DeleteMessage(message, stoppingToken);
+            await TryDeleteMessage(message, eventId, entityId, stoppingToken);
 
             if (logger.IsEnabled(LogLevel.Information))
             {
@@ -125,19 +125,41 @@ public sealed class IntakeEventConsumer(
         {
             if (IntakeFailureReason.IsNonRetryable(exception))
             {
-                logger.LogWarning(
-                    exception,
-                    "Intake event processing failed for event {EventId}, entity {EntityId}; acknowledging non-retryable message",
+                logger.LogError(
+                    "Intake event {EventId} for entity {EntityId} acknowledged as non-retryable ({ExceptionType})",
                     eventId,
-                    entityId
+                    entityId,
+                    exception.GetType().Name
                 );
-                await DeleteMessage(message, stoppingToken);
+                await TryDeleteMessage(message, eventId, entityId, stoppingToken);
                 return;
             }
 
             logger.LogWarning(
                 exception,
                 "Intake event processing failed for event {EventId}, entity {EntityId}; message left on queue for retry",
+                eventId,
+                entityId
+            );
+        }
+    }
+
+    private async Task TryDeleteMessage(
+        Message message,
+        string? eventId,
+        string? entityId,
+        CancellationToken stoppingToken
+    )
+    {
+        try
+        {
+            await DeleteMessage(message, stoppingToken);
+        }
+        catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                exception,
+                "Failed to delete message for event {EventId}, entity {EntityId}; message will be redelivered",
                 eventId,
                 entityId
             );

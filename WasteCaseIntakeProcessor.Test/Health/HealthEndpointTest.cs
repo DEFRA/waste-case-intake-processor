@@ -13,6 +13,7 @@ public class HealthEndpointTest
         {
             builder.UseSetting("AWS:ServiceURL", "http://localhost:4566");
             builder.UseSetting("AWS:Region", "eu-west-2");
+            builder.UseSetting("IntakeEventConsumer:ProcessingEnabled", "false");
         });
         using var client = factory.CreateClient();
 

@@ -41,5 +41,5 @@ public sealed class IntakeEventConsumerOptions
     /// </summary>
     public bool HasValidProcessingBudget =>
         ReceiveTimeoutSeconds > WaitTimeSeconds
-        && VisibilityTimeoutSeconds >= ProcessingTimeoutSeconds + DeleteTimeoutSeconds + SafetyHeadroomSeconds;
+        && VisibilityTimeoutSeconds > ProcessingTimeoutSeconds + DeleteTimeoutSeconds + SafetyHeadroomSeconds;
 }

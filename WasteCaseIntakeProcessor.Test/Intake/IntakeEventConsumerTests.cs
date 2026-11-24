@@ -181,28 +181,49 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task Budget_exhausted_leaves_message_on_queue()
+    public async Task Processor_timeout_leaves_message_on_queue()
     {
+        // TimeoutException (from EnsureRemaining or a timed-out dependency) is retryable:
+        // the message is left on the queue, not deleted.
         var message = new Message { Body = MatchedBody, ReceiptHandle = "rh-5" };
         var (sqsClient, cts) = SqsWithOneMessage(message);
+        var processor = Substitute.For<IIntakeProcessor>();
+        processor
+            .ProcessAsync(Arg.Any<WasteObligationsAnalyticsEvent>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new TimeoutException("Intake dependency exceeded its timeout.")));
 
-        // VisibilityTimeoutSeconds equals the processing budget exactly:
-        // ProcessingTimeoutSeconds(60) + DeleteTimeoutSeconds(5) + SafetyHeadroomSeconds(10) = 75
-        // EnsureRemaining required = 75s; elapsed ≈ 0 → 0 + 75 >= 75 → throws immediately
-        var opts = new IntakeEventConsumerOptions
-        {
-            QueueUrl = QueueUrl,
-            ProcessingEnabled = true,
-            VisibilityTimeoutSeconds = 75,
-        };
-
-        var consumer = BuildConsumer(sqsClient, opts);
+        var consumer = BuildConsumer(sqsClient, processor: processor);
         await consumer.StartAsync(cts.Token);
         await consumer.ExecuteTask!;
 
         await sqsClient
             .DidNotReceive()
             .DeleteMessageAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Delete_failure_logs_warning_and_continues()
+    {
+        var message = new Message { Body = MatchedBody, ReceiptHandle = "rh-del" };
+        var (sqsClient, cts) = SqsWithOneMessage(message);
+
+        // Override the delete setup from SqsWithOneMessage to throw instead
+        sqsClient
+            .DeleteMessageAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<DeleteMessageResponse>(new Exception("SQS unavailable")));
+
+        var processor = Substitute.For<IIntakeProcessor>();
+        processor
+            .ProcessAsync(Arg.Any<WasteObligationsAnalyticsEvent>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var consumer = BuildConsumer(sqsClient, processor: processor);
+        await consumer.StartAsync(cts.Token);
+        await consumer.ExecuteTask!; // delete failure must not propagate
+
+        await processor
+            .Received(1)
+            .ProcessAsync(Arg.Any<WasteObligationsAnalyticsEvent>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
