@@ -6,7 +6,7 @@ namespace WasteCaseIntakeProcessor.Test.Health;
 public class HealthEndpointTest
 {
     [Fact]
-    public async Task Get_returns_ok_and_healthy()
+    public async Task Get_when_called_returns_ok_and_healthy()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>

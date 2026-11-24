@@ -5,7 +5,7 @@ namespace WasteCaseIntakeProcessor.Test.Intake;
 public class IntakeEventConsumerOptionsTests
 {
     [Fact]
-    public void HasValidProcessingBudget_is_true_for_defaults()
+    public void HasValidProcessingBudget_when_defaults_returns_true()
     {
         var options = new IntakeEventConsumerOptions { QueueUrl = "http://localhost/queue" };
 
@@ -13,7 +13,7 @@ public class IntakeEventConsumerOptionsTests
     }
 
     [Fact]
-    public void HasValidProcessingBudget_is_false_when_visibility_too_small()
+    public void HasValidProcessingBudget_when_visibility_too_small_returns_false()
     {
         var options = new IntakeEventConsumerOptions
         {
@@ -28,7 +28,7 @@ public class IntakeEventConsumerOptionsTests
     }
 
     [Fact]
-    public void HasValidProcessingBudget_is_false_when_receive_timeout_not_above_wait()
+    public void HasValidProcessingBudget_when_receive_timeout_not_above_wait_returns_false()
     {
         var options = new IntakeEventConsumerOptions
         {
@@ -41,7 +41,7 @@ public class IntakeEventConsumerOptionsTests
     }
 
     [Fact]
-    public void HasValidProcessingBudget_rejects_visibility_at_exact_processing_budget()
+    public void HasValidProcessingBudget_when_visibility_equals_budget_sum_returns_false()
     {
         // Defaults: Processing(60) + Delete(5) + Headroom(10) = 75; must be strictly greater than EnsureRemaining allows.
         var options = new IntakeEventConsumerOptions
@@ -54,7 +54,7 @@ public class IntakeEventConsumerOptionsTests
     }
 
     [Fact]
-    public void HasValidProcessingBudget_accepts_visibility_one_second_above_processing_budget()
+    public void HasValidProcessingBudget_when_visibility_one_above_budget_returns_true()
     {
         var options = new IntakeEventConsumerOptions
         {

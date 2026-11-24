@@ -9,7 +9,7 @@ public class IntakeFailureReasonTests
     [InlineData(typeof(IntakeEventProcessingException), true)]
     [InlineData(typeof(JsonException), true)]
     [InlineData(typeof(InvalidOperationException), false)]
-    public void IsNonRetryable_classifies_known_exceptions(Type exceptionType, bool expected)
+    public void IsNonRetryable_when_known_exception_returns_expected(Type exceptionType, bool expected)
     {
         var exception = (Exception)Activator.CreateInstance(exceptionType, "test")!;
 
@@ -17,7 +17,7 @@ public class IntakeFailureReasonTests
     }
 
     [Fact]
-    public void IsNonRetryable_treats_timeout_as_retryable()
+    public void IsNonRetryable_when_timeout_returns_false()
     {
         var exception = new TimeoutException("Intake processing budget exhausted.");
 

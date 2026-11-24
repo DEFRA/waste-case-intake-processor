@@ -20,7 +20,7 @@ public class WasteObligationsAnalyticsEventTests
         """;
 
     [Fact]
-    public void Parse_submission_created_reads_envelope_fields()
+    public void Parse_when_submission_created_reads_envelope_fields()
     {
         var parsed = WasteObligationsAnalyticsEvent.Parse(SubmissionCreated);
 
@@ -35,7 +35,7 @@ public class WasteObligationsAnalyticsEventTests
     }
 
     [Fact]
-    public void Parse_missing_event_id_throws()
+    public void Parse_when_event_id_missing_throws()
     {
         const string body = """{ "entityId": "cdec_abc", "eventType": "submission.created" }""";
 
@@ -47,7 +47,7 @@ public class WasteObligationsAnalyticsEventTests
     [InlineData("compliance_declaration_v1.3", true)]
     [InlineData("compliance_declaration_v0.9", false)]
     [InlineData("other_entity_v1.0", false)]
-    public void SupportsDeclarationSchema_checks_version(string schemaVersion, bool expected)
+    public void SupportsDeclarationSchema_when_schema_version_returns_expected(string schemaVersion, bool expected)
     {
         var parsed = WasteObligationsAnalyticsEvent.Parse(
             $$"""
@@ -66,13 +66,13 @@ public class WasteObligationsAnalyticsEventTests
     [InlineData("[]")]
     [InlineData("null")]
     [InlineData("\"string\"")]
-    public void Parse_non_object_json_throws(string body)
+    public void Parse_when_body_not_object_throws(string body)
     {
         Assert.Throws<IntakeEventProcessingException>(() => WasteObligationsAnalyticsEvent.Parse(body));
     }
 
     [Fact]
-    public void Parse_without_organisation_yields_null_organisation_id()
+    public void Parse_when_organisation_missing_returns_null_organisation_id()
     {
         var parsed = WasteObligationsAnalyticsEvent.Parse(
             """

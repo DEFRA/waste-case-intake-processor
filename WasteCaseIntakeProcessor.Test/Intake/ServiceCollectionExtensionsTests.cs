@@ -10,7 +10,7 @@ namespace WasteCaseIntakeProcessor.Test.Intake;
 public class ServiceCollectionExtensionsTests
 {
     [Fact]
-    public void AddIntakeEventConsumer_registers_consumer_and_validates_on_start()
+    public void AddIntakeEventConsumer_when_called_registers_consumer()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
@@ -43,7 +43,7 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddIntakeEventConsumer_fails_when_queue_url_missing()
+    public void AddIntakeEventConsumer_when_queue_url_missing_throws_on_options()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
@@ -62,7 +62,7 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddIntakeEventConsumer_registers_sqs_client_when_local_service_url_set()
+    public void AddIntakeEventConsumer_when_aws_service_url_set_registers_sqs_client()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
@@ -87,7 +87,7 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddIntakeEventConsumer_fails_when_processing_budget_invalid()
+    public void AddIntakeEventConsumer_when_processing_budget_invalid_throws_on_options()
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(

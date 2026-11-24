@@ -71,7 +71,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task ProcessingEnabled_false_disables_consuming()
+    public async Task ExecuteAfterStartup_when_processing_disabled_does_not_poll()
     {
         var sqsClient = Substitute.For<IAmazonSQS>();
         var opts = new IntakeEventConsumerOptions { QueueUrl = QueueUrl, ProcessingEnabled = false };
@@ -86,7 +86,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task InvalidProcessingBudget_throws()
+    public async Task ExecuteAfterStartup_when_processing_budget_invalid_throws()
     {
         var sqsClient = Substitute.For<IAmazonSQS>();
         // VisibilityTimeoutSeconds (1) < ProcessingTimeoutSeconds + DeleteTimeoutSeconds + SafetyHeadroomSeconds (75)
@@ -104,7 +104,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task Visibility_75_never_processes_or_deletes_message()
+    public async Task ProcessMessage_when_visibility_equals_budget_sum_does_not_process_or_delete()
     {
         // 75 = default Processing(60) + Delete(5) + Headroom(10). With strict '>' validation the consumer
         // must fail before polling. If validation is loosened to '>=', EnsureRemaining must still block
@@ -140,7 +140,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task Ignored_message_is_deleted_without_processing()
+    public async Task ProcessMessage_when_filtered_deletes_without_processing()
     {
         var message = new Message { Body = FilteredBody, ReceiptHandle = "rh-1" };
         var (sqsClient, cts) = SqsWithOneMessage(message);
@@ -159,7 +159,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task Processed_message_is_deleted()
+    public async Task ProcessMessage_when_matched_deletes_after_processing()
     {
         var message = new Message { Body = MatchedBody, ReceiptHandle = "rh-2" };
         var (sqsClient, cts) = SqsWithOneMessage(message);
@@ -181,7 +181,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task NonRetryable_error_deletes_message()
+    public async Task ProcessMessage_when_non_retryable_error_deletes_message()
     {
         var message = new Message { Body = MatchedBody, ReceiptHandle = "rh-3" };
         var (sqsClient, cts) = SqsWithOneMessage(message);
@@ -198,7 +198,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task Retryable_error_leaves_message_on_queue()
+    public async Task ProcessMessage_when_retryable_error_leaves_message()
     {
         var message = new Message { Body = MatchedBody, ReceiptHandle = "rh-4" };
         var (sqsClient, cts) = SqsWithOneMessage(message);
@@ -217,7 +217,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task Processor_timeout_leaves_message_on_queue()
+    public async Task ProcessMessage_when_processor_times_out_leaves_message()
     {
         // TimeoutException (from EnsureRemaining or a timed-out dependency) is retryable:
         // the message is left on the queue, not deleted.
@@ -238,7 +238,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task Delete_failure_logs_warning_and_continues()
+    public async Task ProcessMessage_when_delete_fails_logs_warning_without_consumed_log()
     {
         var message = new Message { Body = MatchedBody, ReceiptHandle = "rh-del" };
         var (sqsClient, cts) = SqsWithOneMessage(message);
@@ -278,7 +278,7 @@ public class IntakeEventConsumerTests
     }
 
     [Fact]
-    public async Task Receive_error_logs_warning_and_retries()
+    public async Task ExecuteAfterStartup_when_receive_fails_retries()
     {
         using var cts = new CancellationTokenSource();
         var sqsClient = Substitute.For<IAmazonSQS>();

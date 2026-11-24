@@ -8,7 +8,7 @@ namespace WasteCaseIntakeProcessor.Test.Intake;
 public class AnalyticsMessageBodyReaderTests
 {
     [Fact]
-    public void Read_plain_body_returns_unchanged()
+    public void Read_when_plain_body_returns_unchanged()
     {
         var message = new Message { Body = """{"eventId":"x"}""" };
 
@@ -16,7 +16,7 @@ public class AnalyticsMessageBodyReaderTests
     }
 
     [Fact]
-    public void Read_gzip_base64_body_decompresses()
+    public void Read_when_gzip_base64_decompresses()
     {
         const string json = """{"eventId":"compressed"}""";
         var compressed = CompressToBase64(json);
@@ -33,7 +33,7 @@ public class AnalyticsMessageBodyReaderTests
     }
 
     [Fact]
-    public void Read_unsupported_encoding_throws()
+    public void Read_when_unsupported_encoding_throws()
     {
         var message = new Message
         {
@@ -48,7 +48,7 @@ public class AnalyticsMessageBodyReaderTests
     }
 
     [Fact]
-    public void Read_invalid_base64_throws_non_retryable()
+    public void Read_when_invalid_base64_throws_non_retryable()
     {
         var message = new Message
         {
@@ -63,7 +63,7 @@ public class AnalyticsMessageBodyReaderTests
     }
 
     [Fact]
-    public void Read_invalid_gzip_throws_non_retryable()
+    public void Read_when_invalid_gzip_throws_non_retryable()
     {
         // Valid base64 but the decoded bytes are not a valid gzip stream
         var notGzip = Convert.ToBase64String("this is not gzip data"u8.ToArray());

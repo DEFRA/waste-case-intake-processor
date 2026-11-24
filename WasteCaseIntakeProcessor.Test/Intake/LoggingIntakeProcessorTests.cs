@@ -28,7 +28,7 @@ public class LoggingIntakeProcessorTests
     }
 
     [Fact]
-    public async Task ProcessAsync_when_logging_disabled_still_completes()
+    public async Task ProcessAsync_when_logging_disabled_completes()
     {
         var logger = Substitute.For<ILogger<LoggingIntakeProcessor>>();
         logger.IsEnabled(LogLevel.Information).Returns(false);

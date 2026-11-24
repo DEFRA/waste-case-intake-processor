@@ -8,7 +8,7 @@ public class IntakeEventFilterTests
     [Theory]
     [InlineData("submission.created", true)]
     [InlineData("submission.amended", false)]
-    public void ShouldProcess_filters_configured_event_types(string eventType, bool expected)
+    public void ShouldProcess_when_event_type_returns_expected(string eventType, bool expected)
     {
         var filter = CreateFilter(["submission.created"]);
         var analyticsEvent = new WasteObligationsAnalyticsEvent(
@@ -25,7 +25,7 @@ public class IntakeEventFilterTests
     }
 
     [Fact]
-    public void ShouldProcess_rejects_non_declaration_entity()
+    public void ShouldProcess_when_non_declaration_entity_returns_false()
     {
         var filter = CreateFilter(["submission.created"]);
         var analyticsEvent = new WasteObligationsAnalyticsEvent(
