@@ -6,10 +6,15 @@ namespace WasteCaseIntakeProcessor.Test.Health;
 public class HealthEndpointTest
 {
     [Fact]
-    public async Task Get_returns_ok_and_healthy()
+    public async Task Get_when_called_returns_ok_and_healthy()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("AWS:ServiceURL", "http://localhost:4566");
+            builder.UseSetting("AWS:Region", "eu-west-2");
+            builder.UseSetting("IntakeEventConsumer:ProcessingEnabled", "false");
+        });
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/health", cancellationToken);

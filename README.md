@@ -1,11 +1,10 @@
 # waste-case-intake-processor
 
-The Case Intake Processor (CIP) takes submission events from domain systems and turns them into cases in Case Management.
+This deployable is the **CSoC Case Intake Processor (CIP)**. It listens for Waste Obligations compliance declaration
+analytics events and (in later work) creates cases in Case Management. Other case types will use separate processors.
 
-It is not regulator-specific: it handles intake for all domains, and each domain has its own intake logic.
-
-> **Status:** this repository is currently the CDP .NET backend template with build tooling, health check and
-> README updates. The intake logic described below is not implemented yet.
+> **Status:** queue plumbing and an SQS consumer for `submission.created` events are implemented. Waste Obligations read
+> and Case Management `POST /cases` are not implemented yet ([AMCR-667](https://eaflood.atlassian.net/browse/AMCR-667)).
 
 - [How it works](#how-it-works)
 - [Local development](#local-development)
@@ -62,13 +61,27 @@ event.
 [compose.yml](compose.yml) starts a local environment with:
 
 - [floci](https://floci.io) for AWS services (S3, SQS, SNS)
+- `floci-init` — creates SNS topic `waste_obligations_analytics_events` and SQS queue
+  `waste_case_intake_csoc_analytics_events_queue` with a fan-out subscription (`RawMessageDelivery=true`)
 - Redis
 - MongoDB
-- This service
+- This service (intake consumer enabled)
 
 ```bash
 docker compose up --build -d
 ```
+
+### Intake queue configuration
+
+| Setting | Purpose |
+| --- | --- |
+| `IntakeEventConsumer__QueueUrl` | SQS queue URL for CSoC intake (local example: `http://localhost:4566/000000000000/waste_case_intake_csoc_analytics_events_queue`) |
+| `IntakeEventConsumer__ProcessingEnabled` | `true` to poll the queue; `false` in production templates until CDP wiring is complete |
+| `IntakeEventConsumer__HandledEventTypes__0` | Defaults to `submission.created`; additional types can be added |
+| `AWS_ENDPOINT_URL` / `AWS:ServiceURL` | Local only (`compose` env or `appsettings.Development.json`). **Do not** set in production — the SQS client uses IAM/task role when no custom endpoint is configured. |
+
+Waste Obligations publishes declaration analytics to SNS topic `waste_obligations_analytics_events`; this service uses its
+own queue subscribed to that topic (same pattern as `waste-obligations-notifications`).
 
 ### Running
 
