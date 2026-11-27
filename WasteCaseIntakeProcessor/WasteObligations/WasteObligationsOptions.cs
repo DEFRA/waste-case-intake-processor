@@ -15,8 +15,8 @@ public sealed class WasteObligationsOptions : HttpStandardResilienceOptions
 
     public WasteObligationsOptions()
     {
-        // These time the wait for response headers, across retries. A page of 100 full declarations is larger
-        // than the single reads other services make. Reading the body is bounded by HttpClient.Timeout.
+        // Each attempt includes reading the response body. A page of 100 full declarations is larger than the
+        // single reads other services make.
         TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
         AttemptTimeout.Timeout = TimeSpan.FromSeconds(15);
         Retry.MaxRetryAttempts = 3;

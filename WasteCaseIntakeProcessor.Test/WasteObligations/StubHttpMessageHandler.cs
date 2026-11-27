@@ -35,6 +35,16 @@ public sealed class StubHttpMessageHandler : HttpMessageHandler
         return this;
     }
 
+    /// <summary>Sends the headers, then a body that fails part way, as when the connection drops.</summary>
+    public StubHttpMessageHandler RespondWithBrokenBody()
+    {
+        _responses.Enqueue(() =>
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(new BrokenStream()) }
+        );
+
+        return this;
+    }
+
     protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken
@@ -49,7 +59,7 @@ public sealed class StubHttpMessageHandler : HttpMessageHandler
     }
 }
 
-internal sealed class StalledStream : Stream
+internal class StalledStream : Stream
 {
     public override bool CanRead => true;
     public override bool CanSeek => false;
@@ -79,4 +89,10 @@ internal sealed class StalledStream : Stream
     public override void SetLength(long value) => throw new NotSupportedException();
 
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+}
+
+internal sealed class BrokenStream : StalledStream
+{
+    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+        ValueTask.FromException<int>(new IOException("Connection reset"));
 }

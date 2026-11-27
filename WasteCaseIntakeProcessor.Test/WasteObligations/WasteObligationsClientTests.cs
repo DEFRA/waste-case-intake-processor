@@ -29,6 +29,7 @@ public class WasteObligationsClientTests
                 "id": "6f1c2a3b-4d5e-4f60-8a9b-0c1d2e3f4a5b",
                 "registrationType": "DirectProducer",
                 "name": "Example Packaging Ltd",
+                "schemeOperatorName": "Example Scheme Operator Ltd",
                 "referenceNumber": "100123",
                 "regulator": "Environment Agency",
                 "regulatorEmail": "regulator@example.test"
@@ -181,6 +182,7 @@ public class WasteObligationsClientTests
         Assert.Equal(Guid.Parse("6f1c2a3b-4d5e-4f60-8a9b-0c1d2e3f4a5b"), declaration.Organisation!.Id);
         Assert.Equal("DirectProducer", declaration.Organisation.RegistrationType);
         Assert.Equal("Example Packaging Ltd", declaration.Organisation.Name);
+        Assert.Equal("Example Scheme Operator Ltd", declaration.Organisation.SchemeOperatorName);
         Assert.Equal("100123", declaration.Organisation.ReferenceNumber);
         Assert.Equal("Environment Agency", declaration.Organisation.Regulator);
         Assert.Null(declaration.Organisation.BusinessCountry);

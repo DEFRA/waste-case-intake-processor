@@ -28,6 +28,7 @@ public sealed record DeclarationOrganisation(
     string? RegistrationType = null,
     string? Regulator = null,
     string? Name = null,
+    string? SchemeOperatorName = null,
     string? ReferenceNumber = null,
     string? BusinessCountry = null
 );

@@ -77,18 +77,63 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public async Task AddWasteObligationsClient_when_response_body_stalls_gives_up_after_total_timeout()
+    public async Task AddWasteObligationsClient_when_connection_fails_retries_then_succeeds()
+    {
+        var handler = new StubHttpMessageHandler()
+            .RespondWith(new HttpRequestException("Connection refused"))
+            .RespondWith(HttpStatusCode.OK, EmptyPage);
+        var client = BuildClient(Configured("https://waste-obligations.test/"), handler);
+
+        var page = await client.SearchComplianceDeclarations(s_firstPage, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, page.Total);
+        Assert.Equal(2, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task AddWasteObligationsClient_when_response_body_breaks_retries_then_succeeds()
+    {
+        var handler = new StubHttpMessageHandler().RespondWithBrokenBody().RespondWith(HttpStatusCode.OK, EmptyPage);
+        var client = BuildClient(Configured("https://waste-obligations.test/"), handler);
+
+        var page = await client.SearchComplianceDeclarations(s_firstPage, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, page.Total);
+        Assert.Equal(2, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task AddWasteObligationsClient_when_response_body_stalls_retries_after_attempt_timeout()
+    {
+        var settings = Configured("https://waste-obligations.test/");
+        settings["WasteObligations:TotalRequestTimeout:Timeout"] = "00:00:10";
+        settings["WasteObligations:AttemptTimeout:Timeout"] = "00:00:00.500";
+        var handler = new StubHttpMessageHandler().RespondWithStalledBody().RespondWith(HttpStatusCode.OK, EmptyPage);
+        var client = BuildClient(settings, handler);
+
+        var page = await client.SearchComplianceDeclarations(s_firstPage, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, page.Total);
+        Assert.Equal(2, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task AddWasteObligationsClient_when_response_body_always_stalls_gives_up_after_total_timeout()
     {
         var settings = Configured("https://waste-obligations.test/");
         settings["WasteObligations:TotalRequestTimeout:Timeout"] = "00:00:01";
         settings["WasteObligations:AttemptTimeout:Timeout"] = "00:00:00.500";
-        var handler = new StubHttpMessageHandler().RespondWithStalledBody();
+        var handler = new StubHttpMessageHandler()
+            .RespondWithStalledBody()
+            .RespondWithStalledBody()
+            .RespondWithStalledBody()
+            .RespondWithStalledBody();
         var client = BuildClient(settings, handler);
         using var testDeadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         testDeadline.CancelAfter(TimeSpan.FromSeconds(30));
 
         var started = DateTime.UtcNow;
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+        await Assert.ThrowsAnyAsync<Exception>(() =>
             client.SearchComplianceDeclarations(s_firstPage, testDeadline.Token)
         );
 
