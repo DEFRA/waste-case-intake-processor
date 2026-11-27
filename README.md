@@ -3,8 +3,8 @@
 This deployable is the **CSoC Case Intake Processor (CIP)**. It listens for Waste Obligations compliance declaration
 analytics events and (in later work) creates cases in Case Management. Other case types will use separate processors.
 
-> **Status:** queue plumbing and an SQS consumer for `submission.created` events are implemented. Waste Obligations read
-> and Case Management `POST /cases` are not implemented yet ([AMCR-667](https://eaflood.atlassian.net/browse/AMCR-667)).
+> **Status:** queue plumbing, an SQS consumer for `submission.created` events and a Waste Obligations read client are
+> implemented. Case Management `POST /cases` is not implemented yet ([AMCR-667](https://eaflood.atlassian.net/browse/AMCR-667)).
 
 - [How it works](#how-it-works)
 - [Local development](#local-development)
@@ -82,6 +82,23 @@ docker compose up --build -d
 
 Waste Obligations publishes declaration analytics to SNS topic `waste_obligations_analytics_events`; this service uses its
 own queue subscribed to that topic (same pattern as `waste-obligations-notifications`).
+
+### Waste Obligations configuration
+
+The Waste Obligations client reads compliance declarations with `GET /compliance-declarations`, using Basic
+credentials for a client with the `read` scope.
+
+| Setting | Purpose |
+| --- | --- |
+| `WasteObligations__BaseAddress` | Waste Obligations API base address. HTTPS, or HTTP to the local machine. |
+| `WasteObligations__Username` | This service's client id on the Waste Obligations access list. It must match the id there exactly, including case. |
+| `WasteObligations__Password` | That client's secret. Provide it as a CDP secret. |
+| `WasteObligations__Retry__*`, `WasteObligations__AttemptTimeout__Timeout`, `WasteObligations__TotalRequestTimeout__Timeout` | Optional. Default: 3 retries with exponential backoff on server errors and timeouts, 15 seconds per attempt to receive the response headers, 60 seconds in total for them. Reading the response body is cut off 5 seconds after the total, so a stalled response can't hang a run. |
+
+Waste Obligations must list the client: `Acl__Clients__<clientId>__Type=ApiKey`, `Acl__Clients__<clientId>__Secret`
+and `Acl__Clients__<clientId>__Scopes__0=read` in its own secrets. The service starts without these settings; the
+client refuses to send until they are set. Locally, a Waste Obligations instance started with its development settings
+accepts `Developer` / `developer-pwd`.
 
 ### Running
 

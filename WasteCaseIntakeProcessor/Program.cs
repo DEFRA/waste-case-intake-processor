@@ -10,6 +10,7 @@ using WasteCaseIntakeProcessor.Utils;
 using WasteCaseIntakeProcessor.Utils.Http;
 using WasteCaseIntakeProcessor.Utils.Logging;
 using WasteCaseIntakeProcessor.Utils.Mongo;
+using WasteCaseIntakeProcessor.WasteObligations;
 
 var app = BuildApp(args);
 await app.RunAsync();
@@ -53,7 +54,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
     services.AddHttpContextAccessor();
 
     ConfigureHeaderPropagation(services, configuration);
-    ConfigureHttpClients(services);
+    ConfigureHttpClients(services, configuration);
     ConfigureMongo(services, configuration);
 
     services.AddHealthChecks();
@@ -75,11 +76,12 @@ static void ConfigureHeaderPropagation(IServiceCollection services, IConfigurati
 }
 
 [ExcludeFromCodeCoverage]
-static void ConfigureHttpClients(IServiceCollection services)
+static void ConfigureHttpClients(IServiceCollection services, IConfiguration configuration)
 {
     services.AddTransient<ProxyHttpMessageHandler>();
 
     // Register typed HTTP clients here with AddHttpClientWithTracing or AddHttpClientWithProxy.
+    services.AddWasteObligationsClient(configuration);
 }
 
 [ExcludeFromCodeCoverage]
