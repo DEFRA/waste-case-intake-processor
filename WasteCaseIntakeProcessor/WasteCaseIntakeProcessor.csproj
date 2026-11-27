@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWSSDK.SecurityToken" Version="4.1.0.1" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.1.1.1" />
     <PackageReference Include="AWSSDK.SQS" Version="4.1.0.1" />
     <PackageReference Include="Elastic.CommonSchema.Serilog" Version="9.0.0" />
     <PackageReference Include="Elastic.Serilog.Enrichers.Web" Version="9.0.0" />
