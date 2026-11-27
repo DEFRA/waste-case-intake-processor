@@ -91,8 +91,8 @@ credentials for a client with the `read` scope.
 | Setting | Purpose |
 | --- | --- |
 | `WasteObligations__BaseAddress` | Waste Obligations API base address. HTTPS, or HTTP to the local machine. |
-| `WasteObligations__Username` | This service's client id on the Waste Obligations access list. It must match the id there exactly, including case. |
-| `WasteObligations__Password` | That client's secret. Provide it as a CDP secret. |
+| `WasteObligations__ClientId` | This service's client id on the Waste Obligations access list. It must match the id there exactly, including case. |
+| `WasteObligations__ClientSecret` | That client's secret. Provide it as a CDP secret. |
 | `WasteObligations__Retry__*`, `WasteObligations__AttemptTimeout__Timeout`, `WasteObligations__TotalRequestTimeout__Timeout` | Optional. Default: 3 retries with exponential backoff on server errors and timeouts, 15 seconds per attempt, 60 seconds in total. Each attempt includes reading the response body, so a response that fails or stalls part way is retried. |
 
 Waste Obligations must list the client: `Acl__Clients__<clientId>__Type=ApiKey`, `Acl__Clients__<clientId>__Secret`

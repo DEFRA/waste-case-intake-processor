@@ -15,6 +15,8 @@ public class ServiceCollectionExtensionsTests
         { "complianceDeclarations": [], "total": 0, "page": 1, "pageSize": 100 }
         """;
 
+    private static readonly string s_clientSecret = Guid.NewGuid().ToString("N");
+
     private static readonly ComplianceDeclarationSearch s_firstPage = new() { Page = 1, PageSize = 100 };
 
     [Fact]
@@ -165,8 +167,8 @@ public class ServiceCollectionExtensionsTests
         new()
         {
             ["WasteObligations:BaseAddress"] = baseAddress,
-            ["WasteObligations:Username"] = "case-intake-processor",
-            ["WasteObligations:Password"] = "secret-value",
+            ["WasteObligations:ClientId"] = "case-intake-processor",
+            ["WasteObligations:ClientSecret"] = s_clientSecret,
             ["WasteObligations:Retry:Delay"] = "00:00:00.001",
             ["WasteObligations:Retry:UseJitter"] = "false",
         };

@@ -82,7 +82,7 @@ public sealed class WasteObligationsClient(HttpClient client, IOptions<WasteObli
         };
         request.Headers.Authorization = new AuthenticationHeaderValue(
             "Basic",
-            Convert.ToBase64String(Encoding.UTF8.GetBytes($"{settings.Username}:{settings.Password}"))
+            Convert.ToBase64String(Encoding.UTF8.GetBytes($"{settings.ClientId}:{settings.ClientSecret}"))
         );
 
         return request;

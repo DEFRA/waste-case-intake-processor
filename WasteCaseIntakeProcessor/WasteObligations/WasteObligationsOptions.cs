@@ -28,15 +28,17 @@ public sealed class WasteObligationsOptions : HttpStandardResilienceOptions
 
     public string BaseAddress { get; init; } = "set-automatically-when-deployed";
 
-    public string Username { get; init; } = "set-automatically-when-deployed";
+    /// <summary>This service's client id on the Waste Obligations access list.</summary>
+    public string ClientId { get; init; } = "set-automatically-when-deployed";
 
-    public string Password { get; init; } = "set-automatically-when-deployed";
+    /// <summary>That client's secret.</summary>
+    public string ClientSecret { get; init; } = "set-automatically-when-deployed";
 
     /// <summary>
     /// True when the base address is HTTPS (or HTTP to the local machine) and Basic credentials are set.
     /// </summary>
     public bool HasReadAccess =>
-        SecureAddress(BaseAddress) && Configured(Username) && Configured(Password) && !Username.Contains(':');
+        SecureAddress(BaseAddress) && Configured(ClientId) && Configured(ClientSecret) && !ClientId.Contains(':');
 
     /// <summary>The base address with a trailing slash, so relative paths keep its last segment.</summary>
     public Uri BaseUri

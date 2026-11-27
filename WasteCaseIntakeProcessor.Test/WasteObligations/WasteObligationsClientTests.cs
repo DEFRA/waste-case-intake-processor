@@ -10,7 +10,7 @@ public class WasteObligationsClientTests
 {
     private const string BaseAddress = "https://waste-obligations.test/";
 
-    private static readonly string s_password = Guid.NewGuid().ToString("N");
+    private static readonly string s_clientSecret = Guid.NewGuid().ToString("N");
 
     private const string EmptyPage = """
         { "complianceDeclarations": [], "total": 0, "page": 1, "pageSize": 100 }
@@ -150,7 +150,7 @@ public class WasteObligationsClientTests
         Assert.NotNull(authorization);
         Assert.Equal("Basic", authorization.Scheme);
         Assert.Equal(
-            "case-intake-processor:" + s_password,
+            "case-intake-processor:" + s_clientSecret,
             Encoding.UTF8.GetString(Convert.FromBase64String(authorization.Parameter!))
         );
     }
@@ -323,8 +323,8 @@ public class WasteObligationsClientTests
     [InlineData(BaseAddress, "case:intake", "secret-value")]
     public async Task SearchComplianceDeclarations_when_not_configured_throws_before_sending(
         string baseAddress,
-        string username,
-        string password
+        string clientId,
+        string clientSecret
     )
     {
         var handler = new StubHttpMessageHandler();
@@ -333,8 +333,8 @@ public class WasteObligationsClientTests
             new WasteObligationsOptions
             {
                 BaseAddress = baseAddress,
-                Username = username,
-                Password = password,
+                ClientId = clientId,
+                ClientSecret = clientSecret,
             }
         );
 
@@ -356,8 +356,8 @@ public class WasteObligationsClientTests
         var options = new WasteObligationsOptions
         {
             BaseAddress = "http://localhost:8085",
-            Username = "Developer",
-            Password = s_password,
+            ClientId = "Developer",
+            ClientSecret = s_clientSecret,
         };
 
         Assert.True(options.HasReadAccess);
@@ -384,8 +384,8 @@ public class WasteObligationsClientTests
         options ??= new WasteObligationsOptions
         {
             BaseAddress = BaseAddress,
-            Username = "case-intake-processor",
-            Password = s_password,
+            ClientId = "case-intake-processor",
+            ClientSecret = s_clientSecret,
         };
 
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri(BaseAddress) };
