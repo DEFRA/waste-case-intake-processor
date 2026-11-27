@@ -35,6 +35,15 @@ public sealed class WasteObligationsOptions : HttpStandardResilienceOptions
     public string ClientSecret { get; init; } = "set-automatically-when-deployed";
 
     /// <summary>
+    /// Optional CDP developer API key, sent as <c>x-api-key</c> when set. Only for running this service locally against
+    /// Waste Obligations on a CDP environment through its ephemeral-protected gateway; leave it unset when deployed.
+    /// </summary>
+    public string? XApiKey { get; init; }
+
+    /// <summary>True when an x-api-key is set (not empty and not a placeholder).</summary>
+    public bool HasXApiKey => XApiKey is not null && Configured(XApiKey);
+
+    /// <summary>
     /// True when the base address is HTTPS (or HTTP to the local machine) and Basic credentials are set.
     /// </summary>
     public bool HasReadAccess =>

@@ -156,6 +156,41 @@ public class WasteObligationsClientTests
     }
 
     [Fact]
+    public async Task SearchComplianceDeclarations_when_x_api_key_set_sends_it_with_basic_authorization()
+    {
+        var apiKey = Guid.NewGuid().ToString("N");
+        var handler = new StubHttpMessageHandler().RespondWith(HttpStatusCode.OK, EmptyPage);
+        var client = CreateClient(handler, ConfiguredOptions(xApiKey: apiKey));
+
+        await client.SearchComplianceDeclarations(
+            new ComplianceDeclarationSearch { Page = 1, PageSize = 100 },
+            TestContext.Current.CancellationToken
+        );
+
+        var request = Assert.Single(handler.Requests);
+        Assert.Equal(apiKey, Assert.Single(request.Headers.GetValues("x-api-key")));
+        Assert.Equal("Basic", request.Headers.Authorization?.Scheme);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("set-automatically-when-deployed")]
+    public async Task SearchComplianceDeclarations_when_x_api_key_not_set_does_not_send_it(string? xApiKey)
+    {
+        var handler = new StubHttpMessageHandler().RespondWith(HttpStatusCode.OK, EmptyPage);
+        var client = CreateClient(handler, ConfiguredOptions(xApiKey: xApiKey));
+
+        await client.SearchComplianceDeclarations(
+            new ComplianceDeclarationSearch { Page = 1, PageSize = 100 },
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.False(Assert.Single(handler.Requests).Headers.Contains("x-api-key"));
+    }
+
+    [Fact]
     public async Task SearchComplianceDeclarations_when_page_returned_parses_declarations_and_audit()
     {
         var handler = new StubHttpMessageHandler().RespondWith(HttpStatusCode.OK, DeclarationsPage);
@@ -381,15 +416,19 @@ public class WasteObligationsClientTests
         WasteObligationsOptions? options = null
     )
     {
-        options ??= new WasteObligationsOptions
-        {
-            BaseAddress = BaseAddress,
-            ClientId = "case-intake-processor",
-            ClientSecret = s_clientSecret,
-        };
+        options ??= ConfiguredOptions();
 
         var httpClient = new HttpClient(handler) { BaseAddress = new Uri(BaseAddress) };
 
         return new WasteObligationsClient(httpClient, Options.Create(options));
     }
+
+    private static WasteObligationsOptions ConfiguredOptions(string? xApiKey = null) =>
+        new()
+        {
+            BaseAddress = BaseAddress,
+            ClientId = "case-intake-processor",
+            ClientSecret = s_clientSecret,
+            XApiKey = xApiKey,
+        };
 }

@@ -84,6 +84,8 @@ public sealed class WasteObligationsClient(HttpClient client, IOptions<WasteObli
             "Basic",
             Convert.ToBase64String(Encoding.UTF8.GetBytes($"{settings.ClientId}:{settings.ClientSecret}"))
         );
+        if (settings.HasXApiKey)
+            request.Headers.Add("x-api-key", settings.XApiKey);
 
         return request;
     }
