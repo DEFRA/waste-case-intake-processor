@@ -139,7 +139,9 @@ public class ServiceCollectionExtensionsTests
             client.SearchComplianceDeclarations(s_firstPage, testDeadline.Token)
         );
 
-        // Well under the HttpClient.Timeout backstop (total + 5 s), so this is the resilience total timeout.
+        // Before the retries run out (4 attempts) and well under the HttpClient.Timeout backstop (total + 5 s),
+        // so the total timeout ended the call.
+        Assert.True(handler.Requests.Count < 4, $"Sent {handler.Requests.Count}");
         Assert.True(elapsed.Elapsed < TimeSpan.FromSeconds(4), $"Took {elapsed.Elapsed}");
     }
 
