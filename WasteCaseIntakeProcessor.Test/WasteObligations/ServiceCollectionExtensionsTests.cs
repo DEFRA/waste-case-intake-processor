@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Polly.Timeout;
 using WasteCaseIntakeProcessor.WasteObligations;
 
 namespace WasteCaseIntakeProcessor.Test.WasteObligations;
@@ -132,13 +134,13 @@ public class ServiceCollectionExtensionsTests
         using var testDeadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         testDeadline.CancelAfter(TimeSpan.FromSeconds(30));
 
-        var started = DateTime.UtcNow;
-        await Assert.ThrowsAnyAsync<Exception>(() =>
+        var elapsed = Stopwatch.StartNew();
+        await Assert.ThrowsAsync<TimeoutRejectedException>(() =>
             client.SearchComplianceDeclarations(s_firstPage, testDeadline.Token)
         );
 
-        Assert.False(testDeadline.IsCancellationRequested, "The client waited for the caller to cancel");
-        Assert.True(DateTime.UtcNow - started < TimeSpan.FromSeconds(15));
+        // Well under the HttpClient.Timeout backstop (total + 5 s), so this is the resilience total timeout.
+        Assert.True(elapsed.Elapsed < TimeSpan.FromSeconds(4), $"Took {elapsed.Elapsed}");
     }
 
     [Theory]
